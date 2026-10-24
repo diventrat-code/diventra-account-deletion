@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://ukvbxfrkvayuoikiewcl.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+    <title>Verificación de cuenta DIVENTRA</title>
+    <style>
+      :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; color: #172033; background: #f5f7fb; }
+      body { margin: 0; }
+      main { max-width: 760px; margin: 0 auto; padding: 48px 22px 64px; }
+      article { background: #fff; border: 1px solid #dfe5ef; border-radius: 20px; padding: 34px; box-shadow: 0 12px 36px rgb(23 32 51 / 8%); }
+      h1 { color: #0f172a; line-height: 1.2; margin-top: 0; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+      p { line-height: 1.65; }
+      .brand { color: #175cff; font-weight: 800; letter-spacing: .14em; }
+      .secondary { color: #536078; }
+      .ok { color: #116329; }
+      .error { color: #9f1239; }
+      hr { margin: 30px 0; border: 0; border-top: 1px solid #dfe5ef; }
+      @media (max-width: 520px) { main { padding: 20px 12px 40px; } article { padding: 24px 20px; border-radius: 16px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article>
+        <div class="brand">DIVENTRA</div>
+        <h1>Verificación de cuenta</h1>
+        <p id="status">Comprobando el enlace de un solo uso…</p>
+        <hr />
+        <section lang="en">
+          <h1>Account verification</h1>
+          <p id="status-en" class="secondary">Checking the one-time link…</p>
+        </section>
+      </article>
+    </main>
+    <script>
+      const statusEs = document.getElementById('status');
+      const statusEn = document.getElementById('status-en');
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const requestId = query.get('request') || '';
+      const nonce = query.get('nonce') || '';
+      const token = hash.get('access_token') || '';
+      history.replaceState({}, '', location.pathname);
+
+      function result(kind, es, en) {
+        statusEs.className = kind;
+        statusEn.className = kind;
+        statusEs.textContent = es;
+        statusEn.textContent = en;
+      }
+
+      if (!token || !requestId || nonce.length < 40) {
+        result('error', 'El enlace no es válido o ha caducado. Solicita uno nuevo a DIVENTRA.', 'The link is invalid or has expired. Request a new one from DIVENTRA.');
+      } else {
+        fetch('https://ukvbxfrkvayuoikiewcl.supabase.co/functions/v1/account-deletion-external/confirm', {
+          method: 'POST',
+          headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ request_id: requestId, nonce }),
+        }).then((response) => {
+          if (!response.ok) throw new Error('verification_failed');
+          result('ok', 'Tu identidad se ha verificado. DIVENTRA revisará la solicitud antes de autorizar cualquier eliminación.', 'Your identity has been verified. DIVENTRA will review the request before authorizing any deletion.');
+        }).catch(() => result('error', 'No se ha podido verificar el enlace. Puede haber caducado o haber sido utilizado anteriormente.', 'The link could not be verified. It may have expired or already been used.'));
+      }
+    </script>
+  </body>
+</html>
