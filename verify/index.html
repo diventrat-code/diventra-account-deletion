@@ -43,6 +43,7 @@
       const requestId = query.get('request') || '';
       const nonce = query.get('nonce') || '';
       const token = hash.get('access_token') || '';
+      const authType = hash.get('type') || '';
       history.replaceState({}, '', location.pathname);
 
       function result(kind, es, en) {
@@ -52,7 +53,9 @@
         statusEn.textContent = en;
       }
 
-      if (!token || !requestId || nonce.length < 40) {
+      if (token && !requestId && authType === 'signup') {
+        result('ok', 'La cuenta de prueba está confirmada. Ya puede iniciarse la verificación de la solicitud.', 'The test account is confirmed. Request verification can now begin.');
+      } else if (!token || !requestId || nonce.length < 40) {
         result('error', 'El enlace no es válido o ha caducado. Solicita uno nuevo a DIVENTRA.', 'The link is invalid or has expired. Request a new one from DIVENTRA.');
       } else {
         fetch('https://ukvbxfrkvayuoikiewcl.supabase.co/functions/v1/account-deletion-external/confirm', {
